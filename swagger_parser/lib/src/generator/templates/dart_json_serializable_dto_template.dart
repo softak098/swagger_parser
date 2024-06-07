@@ -10,8 +10,10 @@ import '../model/programming_language.dart';
 String dartJsonSerializableDtoTemplate(
   UniversalComponentClass dataClass, {
   required bool markFileAsGenerated,
+  bool immutable = true,
 }) {
-  final className = dataClass.name.toPascal;
+  final className = dataClass.name.toPascal + (!immutable ? "M" : "");
+
   return '''
 ${generatedFileComment(
     markFileAsGenerated: markFileAsGenerated,
@@ -26,26 +28,22 @@ class $className {
   )}${dataClass.parameters.isNotEmpty ? '\n  }' : ''});
   
   factory $className.fromJson(Map<String, Object?> json) => _\$${className}FromJson(json);
-  ${_parametersInClass(dataClass.parameters)}${dataClass.parameters.isNotEmpty ? '\n' : ''}
+  ${_parametersInClass(dataClass.parameters, immutable)}${dataClass.parameters.isNotEmpty ? '\n' : ''}
   Map<String, Object?> toJson() => _\$${className}ToJson(this);
 }
 ''';
 }
 
-String _parametersInClass(List<UniversalType> parameters) => parameters
+String _parametersInClass(List<UniversalType> parameters, bool immutable) => parameters
     .mapIndexed(
-      (i, e) =>
-          '\n${i != 0 && (e.description?.isNotEmpty ?? false) ? '\n' : ''}${descriptionComment(e.description, tab: '  ')}'
-          '${_jsonKey(e)}  final ${e.toSuitableType(ProgrammingLanguage.dart)} ${e.name};',
+      (i, e) => '\n${i != 0 && (e.description?.isNotEmpty ?? false) ? '\n' : ''}${descriptionComment(e.description, tab: '  ')}'
+          '${_jsonKey(e)}  ${immutable ? "final" : ""} ${e.toSuitableType(ProgrammingLanguage.dart)} ${e.name};',
     )
     .join();
 
 String _parametersInConstructor(List<UniversalType> parameters) {
-  final sortedByRequired =
-      List<UniversalType>.from(parameters.sorted((a, b) => a.compareTo(b)));
-  return sortedByRequired
-      .map((e) => '\n    ${_required(e)}this.${e.name}${_defaultValue(e)},')
-      .join();
+  final sortedByRequired = List<UniversalType>.from(parameters.sorted((a, b) => a.compareTo(b)));
+  return sortedByRequired.map((e) => '\n    ${_required(e)}this.${e.name}${_defaultValue(e)},').join();
 }
 
 /// if jsonKey is different from the name
@@ -57,8 +55,7 @@ String _jsonKey(UniversalType t) {
 }
 
 /// return required if isRequired
-String _required(UniversalType t) =>
-    t.isRequired && t.defaultValue == null ? 'required ' : '';
+String _required(UniversalType t) => t.isRequired && t.defaultValue == null ? 'required ' : '';
 
 /// return defaultValue if have
 String _defaultValue(UniversalType t) => t.defaultValue != null

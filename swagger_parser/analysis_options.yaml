@@ -1,4 +1,3 @@
-include: package:carapacik_lints/core.yaml
 analyzer:
   exclude:
     - 'test/e2e/tests/**'

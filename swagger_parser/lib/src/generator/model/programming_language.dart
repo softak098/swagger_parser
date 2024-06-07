@@ -26,8 +26,7 @@ enum ProgrammingLanguage {
   const ProgrammingLanguage(this.fileExtension);
 
   /// Returns [ProgrammingLanguage] from string
-  factory ProgrammingLanguage.fromString(String value) =>
-      ProgrammingLanguage.values.firstWhere(
+  factory ProgrammingLanguage.fromString(String value) => ProgrammingLanguage.values.firstWhere(
         (e) => e.name == value,
         orElse: () => throw ArgumentError(
           "'$value' must be contained in ${ProgrammingLanguage.values.map((e) => e.name)}",
@@ -70,10 +69,11 @@ enum ProgrammingLanguage {
                 markFileAsGenerated: markFilesAsGenerated,
               );
             case JsonSerializer.jsonSerializable:
-              return dartJsonSerializableDtoTemplate(
-                dataClass,
-                markFileAsGenerated: markFilesAsGenerated,
-              );
+              final part1 = dartJsonSerializableDtoTemplate(dataClass, markFileAsGenerated: markFilesAsGenerated);
+              final part2 = dartJsonSerializableDtoTemplate(dataClass, markFileAsGenerated: markFilesAsGenerated, immutable: false);
+
+              return "$part1\n\n$part2";
+            //
             case JsonSerializer.dartMappable:
               return dartDartMappableDtoTemplate(
                 dataClass,
