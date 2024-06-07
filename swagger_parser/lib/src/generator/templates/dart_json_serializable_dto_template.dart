@@ -55,11 +55,26 @@ String _parametersInClass(List<UniversalType> parameters, bool immutable) => par
     )
     .join();
 
-String _fieldMap(List<UniversalType> parameters, String source) => parameters
-    .mapIndexed(
-      (i, e) => '\n${e.name}: $source.${e.name},',
-    )
-    .join();
+String _fieldMap(List<UniversalType> parameters, String source) {
+  StringBuffer sb = StringBuffer();
+
+  for (var e in parameters) {
+    sb.write(e.name);
+    sb.write(":");
+    sb.write("$source.${e.name}");
+
+    //List<UniversalType> a = parameters.map((e) => UniversalType.new(e)).toList();
+
+    if (e.wrappingCollections.isNotEmpty) {
+      if (e.nullable) sb.write("?");
+      sb.write(".map((e)=>${e.type}.from(e)).toList()");
+    } else {}
+
+    sb.writeln(",");
+  }
+
+  return sb.toString();
+}
 
 String _parametersInConstructor(List<UniversalType> parameters) {
   final sortedByRequired = List<UniversalType>.from(parameters.sorted((a, b) => a.compareTo(b)));
