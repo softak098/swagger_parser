@@ -14,16 +14,10 @@ String dartJsonSerializableDtoTemplate(
 }) {
   final className = dataClass.name.toPascal + (!immutable ? "M" : "");
 
-  return '''
-${generatedFileComment(
-    markFileAsGenerated: markFileAsGenerated,
-  )}${ioImport(dataClass)}import 'package:json_annotation/json_annotation.dart';
-${dartImports(imports: dataClass.imports)}
-part '${dataClass.name.toSnake}.g.dart';
-
+  final c = '''
 ${descriptionComment(dataClass.description)}@JsonSerializable()
 class $className {
-  const $className(${dataClass.parameters.isNotEmpty ? '{' : ''}${_parametersInConstructor(
+  ${immutable ? "const" : ""} $className(${dataClass.parameters.isNotEmpty ? '{' : ''}${_parametersInConstructor(
     dataClass.parameters,
   )}${dataClass.parameters.isNotEmpty ? '\n  }' : ''});
   
@@ -32,6 +26,19 @@ class $className {
   Map<String, Object?> toJson() => _\$${className}ToJson(this);
 }
 ''';
+
+  if (immutable) {
+    final h = '''
+${generatedFileComment(
+      markFileAsGenerated: markFileAsGenerated,
+    )}${ioImport(dataClass)}import 'package:json_annotation/json_annotation.dart';
+${dartImports(imports: dataClass.imports)}
+part '${dataClass.name.toSnake}.g.dart';
+''';
+
+    return "$h$c";
+  }
+  return c;
 }
 
 String _parametersInClass(List<UniversalType> parameters, bool immutable) => parameters
