@@ -24,7 +24,7 @@ extension UniversalTypeX on UniversalType {
     final questionMark = (isRequired || wrappingCollections.isNotEmpty) && !nullable || defaultValue != null ? '' : '?';
     switch (lang) {
       case ProgrammingLanguage.dart:
-        return type.toDartType(format) + (!immutable ? "M" : "") + (type.toDartType(format) == 'dynamic' ? '' : questionMark);
+        return type.toDartType(format) + (!immutable && !type.isPrimitive ? "M" : "") + (type.toDartType(format) == 'dynamic' ? '' : questionMark);
       case ProgrammingLanguage.kotlin:
         return type.toKotlinType(format) + questionMark;
     }

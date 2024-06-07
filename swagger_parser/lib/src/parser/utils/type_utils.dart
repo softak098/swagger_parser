@@ -26,6 +26,8 @@ extension StringTypeX on String {
         _ => this
       };
 
+  bool get isPrimitive => switch (this) { 'integer' || 'number' || 'string' || 'file' || 'boolean' || 'object' || 'null' => true, _ => false };
+
   /// Convert string to kotlin type
   String toKotlinType([String? format]) => switch (this) {
         'integer' => 'Int',
@@ -79,8 +81,7 @@ final _enumNameRegExp = RegExp(r'^[a-zA-Z\d_\s-]*$');
 final _startWithNumberRegExp = RegExp(r'^-?\d+');
 
 /// Protect default enum value from incorrect symbols, keywords, etc.
-String? protectDefaultEnum(Object? name) =>
-    protectDefaultValue(name, isEnum: true);
+String? protectDefaultEnum(Object? name) => protectDefaultValue(name, isEnum: true);
 
 /// Protect default value from incorrect symbols, keywords, etc.
 String? protectDefaultValue(
@@ -146,17 +147,11 @@ Set<UniversalEnumItem> protectEnumItemsNames(Iterable<String> names) {
 
   for (final name in names) {
     final (newName, renameDescription) = switch (name) {
-      _
-          when _startWithNumberRegExp.hasMatch(name) &&
-              _enumNameRegExp.hasMatch(numberEnumItemName(name).toCamel) =>
-        (
+      _ when _startWithNumberRegExp.hasMatch(name) && _enumNameRegExp.hasMatch(numberEnumItemName(name).toCamel) => (
           numberEnumItemName(name),
           null,
         ),
-      _ when !_enumNameRegExp.hasMatch(name) => (
-          uniqueEnumItemName(),
-          'Incorrect name has been replaced. Original name: `$name`.'
-        ),
+      _ when !_enumNameRegExp.hasMatch(name) => (uniqueEnumItemName(), 'Incorrect name has been replaced. Original name: `$name`.'),
       _ when dartEnumMemberKeywords.contains(name.toCamel) => (
           '$_valueConst ${leadingDashToMinus(name)}',
           'The name has been replaced because it contains a keyword. Original name: `$name`.'
@@ -186,16 +181,8 @@ final _nameRegExp = RegExp(r'^[a-zA-Z_-][a-zA-Z\d_-]*$');
   bool isMethod = false,
 }) {
   final (newName, error) = switch (name) {
-    null || '' => uniqueIfNull
-        ? (
-            uniqueName(isEnum: isEnum),
-            'Name not received and was auto-generated.'
-          )
-        : (null, null),
-    _ when !_nameRegExp.hasMatch(name) => (
-        uniqueName(isEnum: isEnum),
-        'Incorrect name has been replaced. Original name: `$name`.'
-      ),
+    null || '' => uniqueIfNull ? (uniqueName(isEnum: isEnum), 'Name not received and was auto-generated.') : (null, null),
+    _ when !_nameRegExp.hasMatch(name) => (uniqueName(isEnum: isEnum), 'Incorrect name has been replaced. Original name: `$name`.'),
     _ when dartKeywords.contains(name.toCamel) => (
         '$name ${isEnum ? _enumConst : _valueConst}',
         'The name has been replaced because it contains a keyword. Original name: `$name`.'

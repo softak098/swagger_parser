@@ -61,9 +61,13 @@ String _fieldMap(List<UniversalType> parameters, String source) {
   for (var e in parameters) {
     sb.write(e.name);
     sb.write(":");
-    sb.write("$source.${e.name}");
 
-    //List<UniversalType> a = parameters.map((e) => UniversalType.new(e)).toList();
+    if (e.type.isPrimitive) {
+      sb.write("$source.${e.name}");
+    } else {
+      var ex = "${e.type}M.from($source.${e.name})";
+      sb.write(e.nullable ? "$source.${e.name}==null?null:$ex" : ex);
+    }
 
     if (e.wrappingCollections.isNotEmpty) {
       sb.write(e.questionMark);
