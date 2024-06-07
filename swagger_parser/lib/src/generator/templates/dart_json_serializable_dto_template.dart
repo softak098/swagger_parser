@@ -28,7 +28,7 @@ class $className {
   )}${dataClass.parameters.isNotEmpty ? '\n  }' : ''});
   
   factory $className.fromJson(Map<String, dynamic> json) => _\$${className}FromJson(json);
-  ${_parametersInClass(dataClass.parameters, immutable)}${dataClass.parameters.isNotEmpty ? '\n' : ''}
+  ${_fieldsInClass(dataClass.parameters, immutable)}${dataClass.parameters.isNotEmpty ? '\n' : ''}
   Map<String, dynamic> toJson() => _\$${className}ToJson(this);
   ${!immutable ? cf : ""}
 }
@@ -48,10 +48,10 @@ part '${dataClass.name.toSnake}.g.dart';
   return c;
 }
 
-String _parametersInClass(List<UniversalType> parameters, bool immutable) => parameters
+String _fieldsInClass(List<UniversalType> parameters, bool immutable) => parameters
     .mapIndexed(
       (i, e) => '\n${i != 0 && (e.description?.isNotEmpty ?? false) ? '\n' : ''}${descriptionComment(e.description, tab: '  ')}'
-          '${_jsonKey(e)}  ${immutable ? "final" : ""} ${e.toSuitableType(ProgrammingLanguage.dart, immutable)}${!immutable ? "M" : ""} ${e.name};',
+          '${_jsonKey(e)}  ${immutable ? "final" : ""} ${e.toSuitableType(ProgrammingLanguage.dart, immutable)} ${e.name};',
     )
     .join();
 
