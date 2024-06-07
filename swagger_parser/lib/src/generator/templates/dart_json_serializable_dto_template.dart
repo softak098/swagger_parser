@@ -14,6 +14,12 @@ String dartJsonSerializableDtoTemplate(
 }) {
   final className = dataClass.name.toPascal + (!immutable ? "M" : "");
 
+  final cf = """
+factory $className.from(${dataClass.name.toPascal} source)=>$className(
+${_fieldMap(dataClass.parameters, "source")}
+);
+  """;
+
   final c = '''
 ${descriptionComment(dataClass.description)}@JsonSerializable()
 class $className {
@@ -21,9 +27,10 @@ class $className {
     dataClass.parameters,
   )}${dataClass.parameters.isNotEmpty ? '\n  }' : ''});
   
-  factory $className.fromJson(Map<String, Object?> json) => _\$${className}FromJson(json);
+  factory $className.fromJson(Map<String, dynamic> json) => _\$${className}FromJson(json);
   ${_parametersInClass(dataClass.parameters, immutable)}${dataClass.parameters.isNotEmpty ? '\n' : ''}
-  Map<String, Object?> toJson() => _\$${className}ToJson(this);
+  Map<String, dynamic> toJson() => _\$${className}ToJson(this);
+  ${!immutable ? cf : ""}
 }
 ''';
 
@@ -45,6 +52,12 @@ String _parametersInClass(List<UniversalType> parameters, bool immutable) => par
     .mapIndexed(
       (i, e) => '\n${i != 0 && (e.description?.isNotEmpty ?? false) ? '\n' : ''}${descriptionComment(e.description, tab: '  ')}'
           '${_jsonKey(e)}  ${immutable ? "final" : ""} ${e.toSuitableType(ProgrammingLanguage.dart)} ${e.name};',
+    )
+    .join();
+
+String _fieldMap(List<UniversalType> parameters, String source) => parameters
+    .mapIndexed(
+      (i, e) => '\n${e.name}: $source.${e.name},',
     )
     .join();
 
