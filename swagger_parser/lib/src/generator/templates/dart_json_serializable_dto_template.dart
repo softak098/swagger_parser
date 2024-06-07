@@ -64,8 +64,8 @@ String _fieldMap(List<UniversalType> parameters, String source) {
 
     if (e.type.isPrimitive) {
       sb.write("$source.${e.name}");
-    } else {
-      var ex = "${e.type}M.from($source.${e.name})";
+    } else if (e.wrappingCollections.isEmpty) {
+      var ex = "${e.type}M.from($source.${e.name}!)";
       sb.write(e.nullable ? "$source.${e.name}==null?null:$ex" : ex);
     }
 
