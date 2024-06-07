@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../model/universal_data_class.dart';
 import 'case_utils.dart';
 import 'dart_keywords.dart';
@@ -189,6 +191,8 @@ final _nameRegExp = RegExp(r'^[a-zA-Z_-][a-zA-Z\d_-]*$');
       ),
     _ => (name, null),
   };
+
+  //stdout.writeln("$name->$newName");
 
   return (
     newName,

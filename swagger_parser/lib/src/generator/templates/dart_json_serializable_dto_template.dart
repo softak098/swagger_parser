@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:collection/collection.dart';
 
 import '../../parser/swagger_parser_core.dart';
@@ -6,23 +8,43 @@ import '../../utils/base_utils.dart';
 import '../../utils/type_utils.dart';
 import '../model/programming_language.dart';
 
+final _mcRegex = RegExp(r"MC\w+");
+
 /// Provides template for generating dart DTO using JSON serializable
 String dartJsonSerializableDtoTemplate(
   UniversalComponentClass dataClass, {
   required bool markFileAsGenerated,
   bool immutable = true,
 }) {
-  final className = dataClass.name.toPascal + (!immutable ? "M" : "");
+  final cp = dataClass.name.toPascal;
+  final className = cp + (!immutable ? "M" : "");
 
+  String? comboImplements;
+  if (immutable && _mcRegex.hasMatch(cp)) {
+    stdout.writeln(cp);
+    if (cp.substring(0, 3) == cp.substring(0, 3).toUpperCase()) {
+      String c1 = "", c2 = "";
+
+      if (dataClass.parameters.any((element) => element.name == "c")) {
+        c2 = "Code";
+      }
+
+      if (dataClass.parameters.any((element) => element.name == "v" && element.type == "string")) {
+        c1 = "StringValue";
+      }
+
+      comboImplements = "INelis$c1${c2}Combo";
+    }
+  }
   final cf = """
-factory $className.from(${dataClass.name.toPascal} source)=>$className(
+  factory $className.from($cp source) => $className(
 ${_fieldMap(dataClass.parameters, "source")}
-);
+  );
   """;
 
   final c = '''
 ${descriptionComment(dataClass.description)}@JsonSerializable()
-class $className {
+class $className ${comboImplements != null ? "implements $comboImplements " : ""}{
   ${immutable ? "const" : ""} $className(${dataClass.parameters.isNotEmpty ? '{' : ''}${_parametersInConstructor(
     dataClass.parameters,
   )}${dataClass.parameters.isNotEmpty ? '\n  }' : ''});
@@ -30,7 +52,7 @@ class $className {
   factory $className.fromJson(Map<String, dynamic> json) => _\$${className}FromJson(json);
   ${_fieldsInClass(dataClass.parameters, immutable)}${dataClass.parameters.isNotEmpty ? '\n' : ''}
   Map<String, dynamic> toJson() => _\$${className}ToJson(this);
-  ${!immutable ? cf : ""}
+  ${!immutable ? "\n$cf" : ""}
 }
 ''';
 
@@ -39,6 +61,7 @@ class $className {
 ${generatedFileComment(
       markFileAsGenerated: markFileAsGenerated,
     )}${ioImport(dataClass)}import 'package:json_annotation/json_annotation.dart';
+${comboImplements != null ? "import 'package:nelis_api/nelis_combo.dart';" : ""}
 ${dartImports(imports: dataClass.imports)}
 part '${dataClass.name.toSnake}.g.dart';
 ''';
@@ -51,7 +74,7 @@ part '${dataClass.name.toSnake}.g.dart';
 String _fieldsInClass(List<UniversalType> parameters, bool immutable) => parameters
     .mapIndexed(
       (i, e) => '\n${i != 0 && (e.description?.isNotEmpty ?? false) ? '\n' : ''}${descriptionComment(e.description, tab: '  ')}'
-          '${_jsonKey(e)}  ${immutable ? "final" : ""} ${e.toSuitableType(ProgrammingLanguage.dart, immutable)} ${e.name};',
+          '${_jsonKey(e)}  ${immutable ? "final " : ""}${e.toSuitableType(ProgrammingLanguage.dart, immutable)} ${e.name};',
     )
     .join();
 
@@ -59,20 +82,20 @@ String _fieldMap(List<UniversalType> parameters, String source) {
   StringBuffer sb = StringBuffer();
 
   for (var e in parameters) {
+    sb.write("    ");
     sb.write(e.name);
-    sb.write(":");
+    sb.write(": ");
 
-    if (e.type.isPrimitive) {
+    if (e.type.isPrimitive || e.enumType != null) {
       sb.write("$source.${e.name}");
     } else if (e.wrappingCollections.isEmpty) {
-      var ex = "${e.type}M.from($source.${e.name}!)";
-      sb.write(e.nullable ? "$source.${e.name}==null?null:$ex" : ex);
+      var ex = "${e.type}M.from($source.${e.name}${e.nullable ? "!" : ""})";
+      sb.write(e.nullable ? "$source.${e.name} == null ? null : $ex" : ex);
+    } else {
+      sb.write("$source.${e.name}");
+      sb.write(e.wrappingCollections.first.questionMark);
+      sb.write(".map((e) => ${e.type}M.from(e)).toList()");
     }
-
-    if (e.wrappingCollections.isNotEmpty) {
-      sb.write(e.questionMark);
-      sb.write(".map((e)=>${e.type}M.from(e)).toList()");
-    } else {}
 
     sb.writeln(",");
   }
