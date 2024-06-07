@@ -4,15 +4,15 @@ import '../parser/swagger_parser_core.dart';
 /// Converts [UniversalType] to type from specified language
 extension UniversalTypeX on UniversalType {
   /// Converts [UniversalType] to concrete type of certain [ProgrammingLanguage]
-  String toSuitableType(ProgrammingLanguage lang) {
+  String toSuitableType(ProgrammingLanguage lang, [bool immutable = true]) {
     if (wrappingCollections.isEmpty) {
-      return _questionMark(lang);
+      return _questionMark(lang, immutable);
     }
     final sb = StringBuffer();
     for (final collection in wrappingCollections) {
       sb.write(collection.collectionsString);
     }
-    sb.write(_questionMark(lang));
+    sb.write(_questionMark(lang, immutable));
     for (final collection in wrappingCollections.reversed) {
       sb.write('>${collection.questionMark}');
     }
@@ -20,20 +20,15 @@ extension UniversalTypeX on UniversalType {
     return sb.toString();
   }
 
-  String _questionMark(ProgrammingLanguage lang) {
-    final questionMark =
-        (isRequired || wrappingCollections.isNotEmpty) && !nullable ||
-                defaultValue != null
-            ? ''
-            : '?';
+  String _questionMark(ProgrammingLanguage lang, bool immutable) {
+    final questionMark = (isRequired || wrappingCollections.isNotEmpty) && !nullable || defaultValue != null ? '' : '?';
     switch (lang) {
       case ProgrammingLanguage.dart:
-        // https://github.com/trevorwang/retrofit.dart/issues/631
-        // https://github.com/Carapacik/swagger_parser/issues/110
-        return type.toDartType(format) +
-            (type.toDartType(format) == 'dynamic' ? '' : questionMark);
+        return type.toDartType(format) + (!immutable ? "M" : "") + (type.toDartType(format) == 'dynamic' ? '' : questionMark);
       case ProgrammingLanguage.kotlin:
         return type.toKotlinType(format) + questionMark;
     }
   }
+
+  String get questionMark => (isRequired || wrappingCollections.isNotEmpty) && !nullable || defaultValue != null ? '' : '?';
 }

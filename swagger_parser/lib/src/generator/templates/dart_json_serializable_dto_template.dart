@@ -51,7 +51,7 @@ part '${dataClass.name.toSnake}.g.dart';
 String _parametersInClass(List<UniversalType> parameters, bool immutable) => parameters
     .mapIndexed(
       (i, e) => '\n${i != 0 && (e.description?.isNotEmpty ?? false) ? '\n' : ''}${descriptionComment(e.description, tab: '  ')}'
-          '${_jsonKey(e)}  ${immutable ? "final" : ""} ${e.toSuitableType(ProgrammingLanguage.dart)} ${e.name};',
+          '${_jsonKey(e)}  ${immutable ? "final" : ""} ${e.toSuitableType(ProgrammingLanguage.dart, immutable)}${!immutable ? "M" : ""} ${e.name};',
     )
     .join();
 
@@ -66,8 +66,8 @@ String _fieldMap(List<UniversalType> parameters, String source) {
     //List<UniversalType> a = parameters.map((e) => UniversalType.new(e)).toList();
 
     if (e.wrappingCollections.isNotEmpty) {
-      if (e.nullable) sb.write("?");
-      sb.write(".map((e)=>${e.type}.from(e)).toList()");
+      sb.write(e.questionMark);
+      sb.write(".map((e)=>${e.type}M.from(e)).toList()");
     } else {}
 
     sb.writeln(",");
