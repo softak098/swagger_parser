@@ -62,6 +62,7 @@ ${generatedFileComment(
       markFileAsGenerated: markFileAsGenerated,
     )}${ioImport(dataClass)}import 'package:json_annotation/json_annotation.dart';
 ${comboImplements != null ? "import 'package:nelis_api/nelis_combo.dart';" : ""}
+import 'package:copy_with_extension/copy_with_extension.dart';
 ${dartImports(imports: dataClass.imports)}
 part '${dataClass.name.toSnake}.g.dart';
 ''';
