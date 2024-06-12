@@ -49,13 +49,14 @@ String _toClientRequest(
   required bool originalHttpResponse,
   required bool extrasParameterByDefault,
 }) {
-  final responseType = request.returnType == null
-      ? 'void'
-      : request.returnType!.toSuitableType(ProgrammingLanguage.dart);
+  final responseType = request.returnType == null ? 'void' : request.returnType!.toSuitableType(ProgrammingLanguage.dart);
+
+  final requestType = request.requestType.name.toUpperCase();
+
   final sb = StringBuffer(
     '''
 
-  ${descriptionComment(request.description, tabForFirstLine: false, tab: '  ', end: '  ')}${request.isDeprecated ? "@Deprecated('This method is marked as deprecated')\n  " : ''}${_contentTypeHeader(request, defaultContentType)}@${request.requestType.name.toUpperCase()}('${request.route}')
+  ${descriptionComment(request.description, tabForFirstLine: false, tab: '  ', end: '  ')}${request.isDeprecated ? "@Deprecated('This method is marked as deprecated')\n  " : ''}${_contentTypeHeader(request, defaultContentType)}@${requestType}('${request.route}')
   Future<${originalHttpResponse ? 'HttpResponse<$responseType>' : responseType}> ${request.name}(''',
   );
   if (request.parameters.isNotEmpty || extrasParameterByDefault) {
@@ -78,8 +79,7 @@ String _toClientRequest(
   return sb.toString();
 }
 
-String _convertImport(UniversalRestClient restClient) =>
-    restClient.requests.any(
+String _convertImport(UniversalRestClient restClient) => restClient.requests.any(
       (r) => r.parameters.any(
         (e) => e.parameterType.isPart,
       ),
@@ -101,15 +101,19 @@ String _toParameter(UniversalRequestType parameter) {
   var parameterType = parameter.type.toSuitableType(ProgrammingLanguage.dart);
   // https://github.com/trevorwang/retrofit.dart/issues/631
   // https://github.com/Carapacik/swagger_parser/issues/110
-  if (parameter.parameterType.isBody &&
-      (parameterType == 'Object' || parameterType == 'Object?')) {
+
+  if (parameter.parameterType.isBody && (parameterType == 'Object' || parameterType == 'Object?')) {
     parameterType = 'dynamic';
   }
 
+  if (!parameter.type.type.isPrimitive) {
+    // use mutable variant as request parameter
+    parameterType += "M";
+  }
+
   // https://github.com/trevorwang/retrofit.dart/issues/661
-  // The Word `value` cant be used a a keyword argument
-  final keywordArguments =
-      parameter.type.name!.toCamel.replaceFirst('value', 'value_');
+  // The Word `value` cant be used as a keyword argument
+  final keywordArguments = parameter.type.name!.toCamel.replaceFirst('value', 'value_');
 
   return "    @${parameter.parameterType.type}(${parameter.name != null && !parameter.parameterType.isBody ? "${parameter.parameterType.isPart ? 'name: ' : ''}'${parameter.name}'" : ''}) "
       '${_required(parameter.type)}'
@@ -139,16 +143,13 @@ String _hideHeaders(
   String defaultContentType,
 ) =>
     restClient.requests.any(
-      (r) =>
-          r.contentType != defaultContentType &&
-          !(r.isMultiPart || r.isFormUrlEncoded),
+      (r) => r.contentType != defaultContentType && !(r.isMultiPart || r.isFormUrlEncoded),
     )
         ? ' hide Headers'
         : '';
 
 /// return required if isRequired
-String _required(UniversalType t) =>
-    t.isRequired && t.defaultValue == null ? 'required ' : '';
+String _required(UniversalType t) => t.isRequired && t.defaultValue == null ? 'required ' : '';
 
 /// return defaultValue if have
 String _defaultValue(UniversalType t) => t.defaultValue != null
