@@ -1,14 +1,6 @@
 name: swagger_parser
-description: Package that generates REST clients and data classes from OpenApi definition file
-version: 1.18.0-7
-repository: https://github.com/Carapacik/swagger_parser/tree/main/swagger_parser
-homepage: https://omega-r.com
-topics:
-  - swagger
-  - openapi
-  - codegen
-  - api
-  - rest
+description: Package that generates REST clients and data classes from OpenApi definition file - NewLink modifications
+version: 2.0.0
 environment:
   sdk: '>=3.2.0 <4.0.0'
 
