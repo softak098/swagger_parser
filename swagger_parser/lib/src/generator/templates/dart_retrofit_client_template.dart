@@ -21,6 +21,7 @@ ${generatedFileComment(markFileAsGenerated: markFileAsGenerated)}${_convertImpor
       restClient,
     )}import 'package:dio/dio.dart'${_hideHeaders(restClient, defaultContentType)};
 import 'package:retrofit/retrofit.dart';
+import 'package:nelis_api/decimal.dart';
 ${dartImports(imports: restClient.imports, pathPrefix: '../models/')}
 part '${name.toSnake}.g.dart';
 

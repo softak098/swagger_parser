@@ -10,10 +10,10 @@ extension StringTypeX on String {
   String toDartType([String? format]) => switch (this) {
         'integer' => 'int',
         'number' => switch (format) {
-            'float' || 'double' => 'double',
+            'float' || 'double' => 'Decimal',
             // This can happen
             'string' => 'String',
-            _ => 'num',
+            _ => 'Decimal',
           },
         'string' => switch (format) {
             'binary' => 'File',

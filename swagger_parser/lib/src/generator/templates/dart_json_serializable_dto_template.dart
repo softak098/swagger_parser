@@ -20,7 +20,7 @@ String dartJsonSerializableDtoTemplate(
   final className = cp + (!immutable ? "M" : "");
 
   String? comboImplements;
-  if (immutable && _mcRegex.hasMatch(cp)) {
+  if (_mcRegex.hasMatch(cp)) {
     stdout.writeln(cp);
     if (cp.substring(0, 3) == cp.substring(0, 3).toUpperCase()) {
       String c1 = "", c2 = "";
@@ -63,6 +63,7 @@ ${generatedFileComment(
     )}${ioImport(dataClass)}import 'package:json_annotation/json_annotation.dart';
 ${comboImplements != null ? "import 'package:nelis_api/nelis_combo.dart';" : ""}
 import 'package:copy_with_extension/copy_with_extension.dart';
+import 'package:nelis_api/decimal.dart';
 ${dartImports(imports: dataClass.imports)}
 part '${dataClass.name.toSnake}.g.dart';
 ''';
@@ -111,10 +112,13 @@ String _parametersInConstructor(List<UniversalType> parameters) {
 
 /// if jsonKey is different from the name
 String _jsonKey(UniversalType t) {
+  String decimalAnotation = "";
+  if (t.type.toDartType() == "Decimal") decimalAnotation = "  @DecimalJsonConverter()\n";
+
   if (t.jsonKey == null || t.name == t.jsonKey) {
-    return '';
+    return decimalAnotation;
   }
-  return "  @JsonKey(name: '${protectJsonKey(t.jsonKey)}')\n";
+  return "  @JsonKey(name: '${protectJsonKey(t.jsonKey)}')\n$decimalAnotation";
 }
 
 /// return required if isRequired

@@ -21,12 +21,19 @@ extension UniversalTypeX on UniversalType {
   }
 
   String _questionMark(ProgrammingLanguage lang, bool immutable) {
-    final questionMark = (isRequired || wrappingCollections.isNotEmpty) && !nullable || defaultValue != null ? '' : '?';
+    var questionMark = (isRequired || wrappingCollections.isNotEmpty) && !nullable || defaultValue != null ? '' : '?';
     switch (lang) {
       case ProgrammingLanguage.dart:
+        final dartType = type.toDartType(format);
+        if (!immutable) {
+          if (dartType == "String") questionMark = "?";
+          if (!type.isPrimitive) questionMark = "?";
+        }
+
         return type.toDartType(format) +
             (!immutable && !type.isPrimitive && this.enumType == null ? "M" : "") +
-            (type.toDartType(format) == 'dynamic' ? '' : questionMark);
+            (dartType == 'dynamic' ? '' : questionMark);
+      //
       case ProgrammingLanguage.kotlin:
         return type.toKotlinType(format) + questionMark;
     }
